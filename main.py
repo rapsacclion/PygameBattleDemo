@@ -1,4 +1,4 @@
-import pygame, random
+import pygame, random, math
 
 pygame.mixer.init()
 pygame.init()
@@ -51,6 +51,39 @@ fight_1 = pygame.image.load("fight00.png")
 fightrect = fight_1.get_rect()
 fightmask = pygame.mask.from_surface(fight_1)
 
+# boss sprites
+
+boss = pygame.image.load("demosprite23.png")
+boss = pygame.transform.scale(boss, (128, 128))
+mad = pygame.image.load("demosprite25.png")
+mad = pygame.transform.scale(mad, (128, 128))
+bossrect = boss.get_rect()
+lhorn = pygame.image.load("demon potato00.png")
+rhorn = pygame.image.load("demon potato01.png")
+lhorn = pygame.transform.scale(lhorn, (64, 64))
+rhorn = pygame.transform.scale(rhorn, (64, 64))
+hornrect = lhorn.get_rect()
+lcrab = pygame.image.load("demon potato11.png")
+rcrab = pygame.image.load("demon potato09.png")
+lcrab = pygame.transform.scale(lcrab, (64, 64))
+rcrab = pygame.transform.scale(rcrab, (64, 64))
+lcrab1 = pygame.image.load("demon potato10.png")
+rcrab1 = pygame.image.load("demon potato08.png")
+lcrab1 = pygame.transform.scale(lcrab1, (64, 64))
+rcrab1 = pygame.transform.scale(rcrab1, (64, 64))
+crabrect = lcrab.get_rect()
+circle1 = pygame.image.load("demon potato02.png")
+circle2 = pygame.image.load("demon potato03.png")
+circle1 = pygame.transform.scale(circle1, (160, 160))
+circle2 = pygame.transform.scale(circle2, (160, 160))
+circlerect = circle1.get_rect()
+mouth1 = pygame.image.load("demon potato12.png")
+mouth2 = pygame.image.load("demon potato13.png")
+mouth1 = pygame.transform.scale(mouth1, (80, 80))
+mouth2 = pygame.transform.scale(mouth2, (80, 80))
+mouthrect = mouth1.get_rect()
+
+
 spek = pygame.mixer.Sound("charspeak1.wav")
 
 #function declaration
@@ -73,6 +106,7 @@ def getcol(rect1, rect2, mask1, mask2):
 pygame.mixer.music.set_volume(0.7)
 gameDisplay.fill(white)
 go = False
+creepy = False
 direction = 0
 mode = 0
 #mode = 0 - title
@@ -98,10 +132,19 @@ bosstalk = {
     5: "i n f i n i  t e   p o w e r"
 }
 #main loop
+time = 0
 while not crashed:
-    gameDisplay.fill(white)
+    time += 0.01
+    if creepy:
+        if onTick:
+            gameDisplay.fill((0, 0, 0))
+        else:
+            gameDisplay.fill((random.randint(0, int(math.cos(time)*75)+76), 0, 0))
+    else:
+        gameDisplay.fill(white)
     playerrect.center = (x_pos, y_pos)
     if mode == 0:
+        creepy = True
         if aaaaaa >= 2:
             gameDisplay.blit(skippitydoodah, (0, 0))
             aaaaaa -= 1
@@ -126,9 +169,114 @@ while not crashed:
             if go:
                 bossphase += 1
         else:
-            paragraph = 'congrats'
+            paragraph = 'congrats. that was the first build! more out soon'
+            creepy = False
+        bosscoords = (500+math.cos(time*2*(bossphase+1))*10, 300+math.sin(time*5*(bossphase+1))*10)
+        lhcoords = (bosscoords[0]-48+math.cos(time)*-5, bosscoords[1]-48+math.sin(time)*5)
+        rhcoords = (bosscoords[0]+48+math.cos(time)*5, bosscoords[1]-48+math.sin(time)*5)
+        circlecoords = (bosscoords[0], bosscoords[1])
+        mouthcoords = (bosscoords[0], bosscoords[1]+16)
+        examplecoords = (bosscoords[0], bosscoords[1])
+        rccoords = (lhcoords[0]-32, lhcoords[1]+128+24*math.cos(time*1.5))
+        lccoords = (rhcoords[0]+32, rhcoords[1]+128+24*math.cos(time*1.5))
+        bossrect.center = bosscoords
         if bossphase == 0:
-            pass
+            gameDisplay.blit(boss, bossrect)
+        if bossphase == 1:
+            gameDisplay.blit(mad, bossrect)
+            hornrect.center = lhcoords
+            gameDisplay.blit(lhorn, hornrect)
+            hornrect.center = rhcoords
+            gameDisplay.blit(rhorn, hornrect)
+        if bossphase == 2:
+            gameDisplay.blit(mad, bossrect)
+            hornrect.center = lhcoords
+            gameDisplay.blit(lhorn, hornrect)
+            hornrect.center = rhcoords
+            gameDisplay.blit(rhorn, hornrect)
+            if onTick:
+                crabrect.center = lccoords
+                gameDisplay.blit(lcrab, crabrect)
+                crabrect.center = rccoords
+                gameDisplay.blit(rcrab, crabrect)
+            else:
+                crabrect.center = lccoords
+                gameDisplay.blit(lcrab1, crabrect)
+                crabrect.center = rccoords
+                gameDisplay.blit(rcrab1, crabrect)
+        if bossphase == 3:
+            gameDisplay.blit(mad, bossrect)
+            hornrect.center = lhcoords
+            gameDisplay.blit(lhorn, hornrect)
+            hornrect.center = rhcoords
+            gameDisplay.blit(rhorn, hornrect)
+            circlerect.center = circlecoords
+            if onTick:
+                gameDisplay.blit(circle1, circlerect)
+                crabrect.center = lccoords
+                gameDisplay.blit(lcrab, crabrect)
+                crabrect.center = rccoords
+                gameDisplay.blit(rcrab, crabrect)
+            else:
+                gameDisplay.blit(circle2, circlerect)
+                crabrect.center = lccoords
+                gameDisplay.blit(lcrab1, crabrect)
+                crabrect.center = rccoords
+                gameDisplay.blit(rcrab1, crabrect)
+        if bossphase == 4:
+            gameDisplay.blit(mad, bossrect)
+            hornrect.center = lhcoords
+            gameDisplay.blit(lhorn, hornrect)
+            hornrect.center = rhcoords
+            gameDisplay.blit(rhorn, hornrect)
+            circlerect.center = circlecoords
+            if onTick:
+                gameDisplay.blit(circle1, circlerect)
+                crabrect.center = lccoords
+                gameDisplay.blit(lcrab, crabrect)
+                crabrect.center = rccoords
+                gameDisplay.blit(rcrab, crabrect)
+            else:
+                gameDisplay.blit(circle2, circlerect)
+                crabrect.center = lccoords
+                gameDisplay.blit(lcrab1, crabrect)
+                crabrect.center = rccoords
+                gameDisplay.blit(rcrab1, crabrect)
+            mouthrect.center = mouthcoords
+            if onTick:
+                gameDisplay.blit(mouth1, mouthrect)
+                crabrect.center = lccoords
+                gameDisplay.blit(lcrab, crabrect)
+                crabrect.center = rccoords
+                gameDisplay.blit(rcrab, crabrect)
+            else:
+                gameDisplay.blit(mouth2, mouthrect)
+                crabrect.center = lccoords
+                gameDisplay.blit(lcrab1, crabrect)
+                crabrect.center = rccoords
+                gameDisplay.blit(rcrab1, crabrect)
+        if bossphase == 5:
+            gameDisplay.blit(mad, bossrect)
+            hornrect.center = lhcoords
+            gameDisplay.blit(lhorn, hornrect)
+            hornrect.center = rhcoords
+            gameDisplay.blit(rhorn, hornrect)
+            circlerect.center = circlecoords
+            mouthrect.center = mouthcoords
+            if random.randint(0, 1):
+                gameDisplay.blit(mouth1, mouthrect)
+                gameDisplay.blit(circle1, circlerect)
+                crabrect.center = lccoords
+                gameDisplay.blit(lcrab, crabrect)
+                crabrect.center = rccoords
+                gameDisplay.blit(rcrab, crabrect)
+            else:
+                gameDisplay.blit(mouth2, mouthrect)
+                gameDisplay.blit(circle2, circlerect)
+                crabrect.center = lccoords
+                gameDisplay.blit(lcrab1, crabrect)
+                crabrect.center = rccoords
+                gameDisplay.blit(rcrab1, crabrect)
         if pressed_keys[pygame.K_w]:
             yfpos -= 5
         if pressed_keys[pygame.K_a]:
