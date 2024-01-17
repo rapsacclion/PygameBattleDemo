@@ -18,6 +18,7 @@ crashed = False
 onTick = False
 x_pos = 0
 y_pos = 0
+fightbound = ((300, 300), (450, 450))
 
 # image imports
 alphabet = []
@@ -33,6 +34,7 @@ for t in range(0, 30):
 for t in range(0, 5):
     playerbody.append(pygame.image.load("character_"+str(t)+".png"))
 bgimg = pygame.image.load("fight_bg0.png")
+bgimg = pygame.transform.scale(bgimg, (333, 166))
 title = pygame.image.load("title_1.png")
 skippitydoodah = pygame.image.load("title_2.png")
 title = pygame.transform.scale(title, (1000, 1000))
@@ -57,18 +59,28 @@ direction = 0
 mode = 0
 #mode = 0 - title
 #mode = 1 - fight
+debug = True
+aaaaaa = 4
 
 #main loop
 while not crashed:
     gameDisplay.fill(white)
     if mode == 0:
-        rando = random.randint(random.randint(0, 25), 50)
-        if rando >= 50:
+        if aaaaaa >= 2:
             gameDisplay.blit(skippitydoodah, (0, 0))
+            aaaaaa -= 1
         else:
             gameDisplay.blit(title, (0, 0))
     pressed_keys = pygame.key.get_pressed()
     if mode == 1:
+        if y_pos > fightbound[1][1]-fightbound[0][1]:
+            y_pos -= 5
+        if x_pos < fightbound[1][0]-fightbound[0][0]:
+            x_pos += 5
+        if y_pos < fightbound[1][1]-fightbound[0][1]:
+            y_pos += 5
+        if x_pos > fightbound[1][0]-fightbound[0][0]:
+            x_pos -= 5
         if pressed_keys[pygame.K_w]:
             direction = 3
             y_pos += 5
@@ -96,12 +108,21 @@ while not crashed:
             if event.key == pygame.K_z:
                 pass
             if event.key == pygame.K_SPACE:
-                mode = 1
+                if mode == 0:
+                    mode = 1
             if event.key == pygame.K_RETURN:
-                pass
+                print(x_pos,y_pos)
     if mode == 1:
+        gameDisplay.blit(bgimg, (x_pos+fightbound[0][0], y_pos+fightbound[0][1]))
+        character(direction)
+        '''
+    if mode == 2:
         gameDisplay.blit(bgimg, (x_pos, y_pos))
         character(direction)
+    '''
+    if debug and mode == 1:
+        pygame.draw.rect(gameDisplay, (0, 0, 0, 15), (fightbound[0][0]+x_pos, fightbound[0][1]+y_pos, fightbound[1][0]-fightbound[0][0], fightbound[1][1]-fightbound[0][1]))
+    
     if paragraph != "": #for text
         x = 0
         y = 0
@@ -116,7 +137,6 @@ while not crashed:
                 y += 32
             if y >= 64:
                 break
-            
     pygame.display.update()
     clock.tick(60)
 pygame.quit()
