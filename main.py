@@ -21,8 +21,24 @@ x_pos = 0
 y_pos = 0
 xfpos = 500
 yfpos = 600
-fightbound = ((300, 300), (450, 450))
-
+bulletlist = []
+class Bullet:
+    def __init__(self, pos, num, target):
+        self.pos = pos
+        self.type = num
+        self.target = target
+        bulletlist.append(self)
+    def update(self):
+        
+        self.pos = (int((self.pos[0]*4+self.target[0])/5), int((self.pos[1]*4+self.target[1])/5))
+        if (abs(self.pos[0] - self.target[0]) <= 5) or (abs(self.pos[1] - self.target[1]) <= 5):
+            try:
+                bulletlist.remove(self)
+                del self
+            except:
+                pass
+        else:
+            return (self.pos, self.type)
 
 # image imports
 alphabet = []
@@ -82,7 +98,28 @@ mouth2 = pygame.image.load("demon potato13.png")
 mouth1 = pygame.transform.scale(mouth1, (80, 80))
 mouth2 = pygame.transform.scale(mouth2, (80, 80))
 mouthrect = mouth1.get_rect()
+lhand = pygame.image.load("demon potato05.png")
+rhand = pygame.image.load("demon potato07.png")
+lhand = pygame.transform.scale(lhand, (80, 80))
+rhand = pygame.transform.scale(rhand, (80, 80))
+lhand1 = pygame.image.load("demon potato04.png")
+rhand1 = pygame.image.load("demon potato06.png")
+lhand1 = pygame.transform.scale(lhand1, (80, 80))
+rhand1 = pygame.transform.scale(rhand1, (80, 80))
+handrect = lhand.get_rect()
+eye = pygame.image.load("unnamed.png")
+eye = pygame.transform.scale(eye, (64, 64))
+eyerect = eye.get_rect()
 
+# bullets
+blast0 = pygame.image.load("bullet0.png")
+blast0 = pygame.transform.scale(blast0, (80, 80))
+blast1 = pygame.image.load("bullet1.png")
+blast1 = pygame.transform.scale(blast1, (80, 80))
+blast2 = pygame.image.load("bullet2.png")
+blast2 = pygame.transform.scale(blast2, (80, 80))
+bulletrect = blast0.get_rect()
+bulletmask = pygame.mask.from_surface(blast0)
 
 spek = pygame.mixer.Sound("charspeak1.wav")
 
@@ -115,6 +152,10 @@ mode = 0
 debug = True
 aaaaaa = 4
 bossphase = 0
+blast_type = 0
+shoot = 120
+dodged = 0
+redness = 0
 '''
 0 = cutscene
 1 = simple
@@ -124,12 +165,12 @@ bossphase = 0
 5 = everything
 '''
 bosstalk = {
-    0: "number zero",
-    1: "test one",
-    2: "test the two",
-    3: "there is a three",
-    4: "two and two",
-    5: "i n f i n i  t e   p o w e r"
+    0: "the potato fights back!",
+    1: "haha ha you mortal fool",
+    2: "never challenge the mighty potato!",
+    3: "just die already",
+    4: "arghhh!!!!!",
+    5: "i n f i n i  t e   p o w e r ! ! !"
 }
 #main loop
 time = 0
@@ -139,7 +180,8 @@ while not crashed:
         if onTick:
             gameDisplay.fill((0, 0, 0))
         else:
-            gameDisplay.fill((random.randint(0, int(math.cos(time)*75)+76), 0, 0))
+            redness = (redness + random.randint(0, int(math.cos(time)*75)+76))/2
+            gameDisplay.fill((redness, 0, 0))
     else:
         gameDisplay.fill(white)
     playerrect.center = (x_pos, y_pos)
@@ -179,8 +221,46 @@ while not crashed:
         examplecoords = (bosscoords[0], bosscoords[1])
         rccoords = (lhcoords[0]-32, lhcoords[1]+128+24*math.cos(time*1.5))
         lccoords = (rhcoords[0]+32, rhcoords[1]+128+24*math.cos(time*1.5))
+        rhacoords = (rccoords[0]-64, rccoords[1]+32)
+        lhacoords = (lccoords[0]+64, lccoords[1]+32)
+        eyepos1 = (bosscoords[0]+math.sin(time*3)*80, bosscoords[1]+math.cos(time*3)*80)
+        eyepos2 = (bosscoords[0]+math.sin(time*3+math.pi/2)*80, bosscoords[1]+math.cos(time*3+math.pi/2)*80)
+        eyepos3 = (bosscoords[0]+math.sin(time*3+math.pi)*80, bosscoords[1]+math.cos(time*3+math.pi)*80)
+        eyepos4 = (bosscoords[0]+math.sin(time*3+math.pi*1.5)*80, bosscoords[1]+math.cos(time*3+math.pi*1.5)*80)
+        shootfrom = [bosscoords, lhcoords, rhcoords, circlecoords, mouthcoords, examplecoords, rccoords, lccoords, rhacoords, lhacoords, eyepos1, eyepos2, eyepos3, eyepos4]
+        if bossphase == 4 or bossphase == 5:
+            boom = Bullet(rhacoords, blast_type, (xfpos, yfpos))
+            boom = Bullet(lhacoords, blast_type, (xfpos, yfpos))
         bossrect.center = bosscoords
+        shoot -= (bossphase+1)**2*2+15
+        for bullet in bulletlist:
+            info = bullet.update()
+            try:
+                bulletrect.center = info[0]
+                if info[1] == 0:
+                    gameDisplay.blit(blast0, bulletrect)
+                if info[1] == 1:
+                    gameDisplay.blit(blast1, bulletrect)
+                if info[1] == 2:
+                    gameDisplay.blit(blast2, bulletrect)
+                if getcol(bulletrect, fightrect, bulletmask, fightmask):
+                    mode = 0
+                    dodged = -20*bossphase
+                    bossphase = 0
+                    shoot = 200
+                    bulletlist = []
+                    paragraph = 'you lost           noob!'
+            except:
+                dodged += 1
+                if dodged > (25 + bossphase**3) and bossphase != 6:
+                    dodged = 0
+                    bossphase += 1
+        if shoot <= 0 and bossphase != 6:
+            blaster = shootfrom[random.randint(0, 13)]
+            boom = Bullet(blaster, blast_type, (xfpos, yfpos))
+            shoot = 120-bossphase*10
         if bossphase == 0:
+            blast_type = 0
             gameDisplay.blit(boss, bossrect)
         if bossphase == 1:
             gameDisplay.blit(mad, bossrect)
@@ -188,6 +268,16 @@ while not crashed:
             gameDisplay.blit(lhorn, hornrect)
             hornrect.center = rhcoords
             gameDisplay.blit(rhorn, hornrect)
+            if onTick:
+                handrect.center = lhacoords
+                gameDisplay.blit(lhand, handrect)
+                handrect.center = rhacoords
+                gameDisplay.blit(rhand, handrect)
+            else:
+                handrect.center = lhacoords
+                gameDisplay.blit(lhand1, handrect)
+                handrect.center = rhacoords
+                gameDisplay.blit(rhand1, handrect)
         if bossphase == 2:
             gameDisplay.blit(mad, bossrect)
             hornrect.center = lhcoords
@@ -199,12 +289,21 @@ while not crashed:
                 gameDisplay.blit(lcrab, crabrect)
                 crabrect.center = rccoords
                 gameDisplay.blit(rcrab, crabrect)
+                handrect.center = lhacoords
+                gameDisplay.blit(lhand, handrect)
+                handrect.center = rhacoords
+                gameDisplay.blit(rhand, handrect)
             else:
                 crabrect.center = lccoords
                 gameDisplay.blit(lcrab1, crabrect)
                 crabrect.center = rccoords
                 gameDisplay.blit(rcrab1, crabrect)
+                handrect.center = lhacoords
+                gameDisplay.blit(lhand1, handrect)
+                handrect.center = rhacoords
+                gameDisplay.blit(rhand1, handrect)
         if bossphase == 3:
+            blast_type = 1
             gameDisplay.blit(mad, bossrect)
             hornrect.center = lhcoords
             gameDisplay.blit(lhorn, hornrect)
@@ -217,44 +316,51 @@ while not crashed:
                 gameDisplay.blit(lcrab, crabrect)
                 crabrect.center = rccoords
                 gameDisplay.blit(rcrab, crabrect)
+                handrect.center = lhacoords
+                gameDisplay.blit(lhand, handrect)
+                handrect.center = rhacoords
+                gameDisplay.blit(rhand, handrect)
             else:
                 gameDisplay.blit(circle2, circlerect)
                 crabrect.center = lccoords
                 gameDisplay.blit(lcrab1, crabrect)
                 crabrect.center = rccoords
                 gameDisplay.blit(rcrab1, crabrect)
+                handrect.center = lhacoords
+                gameDisplay.blit(lhand1, handrect)
+                handrect.center = rhacoords
+                gameDisplay.blit(rhand1, handrect)
         if bossphase == 4:
+            blast_type = 2
             gameDisplay.blit(mad, bossrect)
             hornrect.center = lhcoords
             gameDisplay.blit(lhorn, hornrect)
             hornrect.center = rhcoords
             gameDisplay.blit(rhorn, hornrect)
             circlerect.center = circlecoords
-            if onTick:
-                gameDisplay.blit(circle1, circlerect)
-                crabrect.center = lccoords
-                gameDisplay.blit(lcrab, crabrect)
-                crabrect.center = rccoords
-                gameDisplay.blit(rcrab, crabrect)
-            else:
-                gameDisplay.blit(circle2, circlerect)
-                crabrect.center = lccoords
-                gameDisplay.blit(lcrab1, crabrect)
-                crabrect.center = rccoords
-                gameDisplay.blit(rcrab1, crabrect)
             mouthrect.center = mouthcoords
             if onTick:
+                gameDisplay.blit(circle1, circlerect)
                 gameDisplay.blit(mouth1, mouthrect)
                 crabrect.center = lccoords
                 gameDisplay.blit(lcrab, crabrect)
                 crabrect.center = rccoords
                 gameDisplay.blit(rcrab, crabrect)
+                handrect.center = lhacoords
+                gameDisplay.blit(lhand, handrect)
+                handrect.center = rhacoords
+                gameDisplay.blit(rhand, handrect)
             else:
+                gameDisplay.blit(circle2, circlerect)
                 gameDisplay.blit(mouth2, mouthrect)
                 crabrect.center = lccoords
                 gameDisplay.blit(lcrab1, crabrect)
                 crabrect.center = rccoords
                 gameDisplay.blit(rcrab1, crabrect)
+                handrect.center = lhacoords
+                gameDisplay.blit(lhand1, handrect)
+                handrect.center = rhacoords
+                gameDisplay.blit(rhand1, handrect)
         if bossphase == 5:
             gameDisplay.blit(mad, bossrect)
             hornrect.center = lhcoords
@@ -263,6 +369,14 @@ while not crashed:
             gameDisplay.blit(rhorn, hornrect)
             circlerect.center = circlecoords
             mouthrect.center = mouthcoords
+            eyerect.center = eyepos1
+            gameDisplay.blit(eye, eyerect)
+            eyerect.center = eyepos2
+            gameDisplay.blit(eye, eyerect)
+            eyerect.center = eyepos3
+            gameDisplay.blit(eye, eyerect)
+            eyerect.center = eyepos4
+            gameDisplay.blit(eye, eyerect)
             if random.randint(0, 1):
                 gameDisplay.blit(mouth1, mouthrect)
                 gameDisplay.blit(circle1, circlerect)
@@ -270,6 +384,10 @@ while not crashed:
                 gameDisplay.blit(lcrab, crabrect)
                 crabrect.center = rccoords
                 gameDisplay.blit(rcrab, crabrect)
+                handrect.center = lhacoords
+                gameDisplay.blit(lhand, handrect)
+                handrect.center = rhacoords
+                gameDisplay.blit(rhand, handrect)
             else:
                 gameDisplay.blit(mouth2, mouthrect)
                 gameDisplay.blit(circle2, circlerect)
@@ -277,6 +395,10 @@ while not crashed:
                 gameDisplay.blit(lcrab1, crabrect)
                 crabrect.center = rccoords
                 gameDisplay.blit(rcrab1, crabrect)
+                handrect.center = lhacoords
+                gameDisplay.blit(lhand1, handrect)
+                handrect.center = rhacoords
+                gameDisplay.blit(rhand1, handrect)
         if pressed_keys[pygame.K_w]:
             yfpos -= 5
         if pressed_keys[pygame.K_a]:
@@ -319,7 +441,8 @@ while not crashed:
                 if mode == 0:
                     mode = 1
                 else:
-                    go = True
+                    #go = True
+                    pass
             if event.key == pygame.K_RETURN:
                 print(x_pos,y_pos)
     if paragraph != "": #for text
@@ -339,3 +462,4 @@ while not crashed:
     clock.tick(60)
 pygame.quit()
 quit()
+
